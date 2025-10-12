@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { parseEther, formatEther } from "viem";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,9 +20,13 @@ import {
     PencilIcon,
     FileUpIcon
 } from "lucide-react";
-import { contractAddresses, contractABIs, blockExplorer } from "@/lib/contracts";
-import { useAuth } from "@/hooks/useAuth";
-import { readContract } from "viem/actions";
+import { useStacks } from "@/context/StacksContext";
+import { 
+    createProfile, 
+    updateProfile, 
+    updateProfileImage, 
+    getProfile 
+} from "@/lib/stacksUtils";
 
 export default function NFTProfilePage() {
     // Form state
@@ -43,11 +45,14 @@ export default function NFTProfilePage() {
     const [isSuccess, setIsSuccess] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { address, isConnected } = useAccount();
-    const { isAuthenticated } = useAuth();
+    const { stacksUser, userSession, isSignedIn } = useStacks();
 
     // File upload ref
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Transaction state
+    const [txId, setTxId] = useState<string | null>(null);
+    const [isPending, setIsPending] = useState(false);
 
     // Reset states when transaction completes
     const resetStates = () => {
@@ -57,28 +62,8 @@ export default function NFTProfilePage() {
         }, 5000);
     };
 
-    // Read contract data
-    const { data: mintPrice } = useReadContract({
-        address: contractAddresses.nft as `0x${string}`,
-        abi: contractABIs.nft,
-        functionName: "mintPrice",
-    });
-
-    // Write contract
-    const { data: hash, isPending, writeContract } = useWriteContract();
-
-    // Wait for transaction receipt
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({
-            hash,
-        });
-
-    const { data: existingProfile } = useReadContract({
-        address: contractAddresses.nft as `0x${string}`,
-        abi: contractABIs.nft,
-        functionName: "getProfile",
-        args: [BigInt(tokenId)],
-    });
+    const address = stacksUser?.profile?.stxAddress?.testnet || null;
+    const isConnected = isSignedIn();
 
     // Fetch profile data
     const fetchProfile = async () => {
@@ -88,11 +73,17 @@ export default function NFTProfilePage() {
             setIsLoading(true);
             setError(null);
 
-            setProfileData(existingProfile);
-
-            // Pre-fill form fields with existing data
-            if (existingProfile) {
-                console.log("existingProfile", existingProfile);
+            const profile = await getProfile(parseInt(tokenId));
+            
+            if (profile && profile.value) {
+                setProfileData(profile.value);
+                // Pre-fill form fields with existing data
+                setName(profile.value.name || "");
+                setBio(profile.value.bio || "");
+                setSocialLink(profile.value["social-link"] || "");
+            } else {
+                setError("Profile not found");
+                setProfileData(null);
             }
         } catch (err) {
             console.error("Error fetching profile:", err);
@@ -105,19 +96,13 @@ export default function NFTProfilePage() {
 
     // Handle create profile
     const handleCreateProfile = async () => {
-        console.log("handleCreateProfile");
         try {
             setError(null);
 
-            if (!address) {
-                setError("Please connect your wallet first");
+            if (!address || !isConnected) {
+                setError("Please connect your Stacks wallet first");
                 return;
             }
-
-            // if (!isAuthenticated) {
-            //     setError("Please sign in with your wallet first");
-            //     return;
-            // }
 
             if (!name) {
                 setError("Name is required");
@@ -129,18 +114,33 @@ export default function NFTProfilePage() {
                 return;
             }
 
-            const value = mintPrice ? mintPrice.toString() : "0";
+            setIsPending(true);
 
-            writeContract({
-                address: contractAddresses.nft as `0x${string}`,
-                abi: contractABIs.nft,
-                functionName: "createProfile",
-                args: [name, bio, socialLink, imageUrl],
-                value: BigInt(value),
-            });
+            await createProfile(
+                userSession,
+                {
+                    name,
+                    bio,
+                    socialLink,
+                    tokenUri: imageUrl,
+                },
+                (data) => {
+                    console.log("Transaction successful:", data);
+                    setTxId(data.txId);
+                    setIsSuccess(true);
+                    setIsPending(false);
+                    resetStates();
+                },
+                (error) => {
+                    console.error("Transaction cancelled or failed:", error);
+                    setError("Transaction cancelled or failed");
+                    setIsPending(false);
+                }
+            );
         } catch (err) {
             console.error("Error creating profile:", err);
             setError(err instanceof Error ? err.message : "Failed to create profile");
+            setIsPending(false);
         }
     };
 
@@ -149,15 +149,10 @@ export default function NFTProfilePage() {
         try {
             setError(null);
 
-            if (!address) {
-                setError("Please connect your wallet first");
+            if (!address || !isConnected) {
+                setError("Please connect your Stacks wallet first");
                 return;
             }
-
-            // if (!isAuthenticated) {
-            //     setError("Please sign in with your wallet first");
-            //     return;
-            // }
 
             if (!tokenId) {
                 setError("Token ID is required");
@@ -169,15 +164,29 @@ export default function NFTProfilePage() {
                 return;
             }
 
-            writeContract({
-                address: contractAddresses.nft as `0x${string}`,
-                abi: contractABIs.nft,
-                functionName: "updateProfile",
-                args: [BigInt(tokenId), name, bio, socialLink],
-            });
+            setIsPending(true);
+
+            await updateProfile(
+                userSession,
+                parseInt(tokenId),
+                { name, bio, socialLink },
+                (data) => {
+                    console.log("Update successful:", data);
+                    setTxId(data.txId);
+                    setIsSuccess(true);
+                    setIsPending(false);
+                    resetStates();
+                },
+                (error) => {
+                    console.error("Update cancelled or failed:", error);
+                    setError("Transaction cancelled or failed");
+                    setIsPending(false);
+                }
+            );
         } catch (err) {
             console.error("Error updating profile:", err);
             setError(err instanceof Error ? err.message : "Failed to update profile");
+            setIsPending(false);
         }
     };
 
@@ -186,13 +195,8 @@ export default function NFTProfilePage() {
         try {
             setError(null);
 
-            if (!address) {
-                setError("Please connect your wallet first");
-                return;
-            }
-
-            if (!isAuthenticated) {
-                setError("Please sign in with your wallet first");
+            if (!address || !isConnected) {
+                setError("Please connect your Stacks wallet first");
                 return;
             }
 
@@ -206,25 +210,31 @@ export default function NFTProfilePage() {
                 return;
             }
 
-            writeContract({
-                address: contractAddresses.nft as `0x${string}`,
-                abi: contractABIs.nft,
-                functionName: "updateProfileImage",
-                args: [BigInt(tokenId), imageUrl],
-            });
+            setIsPending(true);
+
+            await updateProfileImage(
+                userSession,
+                parseInt(tokenId),
+                imageUrl,
+                (data) => {
+                    console.log("Image update successful:", data);
+                    setTxId(data.txId);
+                    setIsSuccess(true);
+                    setIsPending(false);
+                    resetStates();
+                },
+                (error) => {
+                    console.error("Image update cancelled or failed:", error);
+                    setError("Transaction cancelled or failed");
+                    setIsPending(false);
+                }
+            );
         } catch (err) {
             console.error("Error updating profile image:", err);
             setError(err instanceof Error ? err.message : "Failed to update profile image");
+            setIsPending(false);
         }
     };
-
-    // Update UI based on transaction status
-    useEffect(() => {
-        if (isConfirmed) {
-            setIsSuccess(true);
-            resetStates();
-        }
-    }, [isConfirmed]);
 
     return (
         <div className="container max-w-4xl py-12">
@@ -310,10 +320,10 @@ export default function NFTProfilePage() {
                                 <div className="space-y-2">
                                     <Label>Mint Price</Label>
                                     <div className="text-2xl font-bold">
-                                        {mintPrice ? formatEther(mintPrice as bigint) : "0"} ETH
+                                        Free
                                     </div>
                                     <p className="text-sm text-muted-foreground">
-                                        Plus gas fees
+                                        Transaction fees apply
                                     </p>
                                 </div>
 
@@ -331,9 +341,9 @@ export default function NFTProfilePage() {
                                         <AlertTitle className="text-green-800">Success!</AlertTitle>
                                         <AlertDescription className="text-green-700">
                                             Profile NFT created successfully!{" "}
-                                            {hash && (
+                                            {txId && (
                                                 <a
-                                                    href={`${blockExplorer.nft.split("?")[0]}/tx/${hash}`}
+                                                    href={`https://explorer.hiro.so/txid/${txId}?chain=testnet`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="underline font-medium"
@@ -352,12 +362,12 @@ export default function NFTProfilePage() {
                                 className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
                                 size="lg"
                                 onClick={handleCreateProfile}
-                                disabled={!isConnected || isPending || isConfirming}
+                                disabled={!isConnected || isPending}
                             >
-                                {isPending || isConfirming ? (
+                                {isPending ? (
                                     <>
                                         <RefreshCwIcon className="mr-2 h-4 w-4 animate-spin" />
-                                        {isPending ? "Confirm in Wallet" : "Processing..."}
+                                        Confirm in Wallet
                                     </>
                                 ) : (
                                     <>Create NFT Profile</>
@@ -465,9 +475,9 @@ export default function NFTProfilePage() {
                                             <Button
                                                 className="flex-1 bg-indigo-600 hover:bg-indigo-700"
                                                 onClick={handleUpdateProfile}
-                                                disabled={!isConnected || isPending || isConfirming}
+                                                disabled={!isConnected || isPending}
                                             >
-                                                {isPending || isConfirming ? (
+                                                {isPending ? (
                                                     <RefreshCwIcon className="h-4 w-4 animate-spin" />
                                                 ) : (
                                                     <>
@@ -501,9 +511,9 @@ export default function NFTProfilePage() {
                                             className="w-full"
                                             variant="outline"
                                             onClick={handleUpdateImage}
-                                            disabled={!isConnected || isPending || isConfirming || !imageUrl}
+                                            disabled={!isConnected || isPending || !imageUrl}
                                         >
-                                            {isPending || isConfirming ? (
+                                            {isPending ? (
                                                 <RefreshCwIcon className="h-4 w-4 animate-spin" />
                                             ) : (
                                                 <>
@@ -529,9 +539,9 @@ export default function NFTProfilePage() {
                                         <AlertTitle className="text-green-800">Success!</AlertTitle>
                                         <AlertDescription className="text-green-700">
                                             Profile updated successfully!{" "}
-                                            {hash && (
+                                            {txId && (
                                                 <a
-                                                    href={`${blockExplorer.nft.split("?")[0]}/tx/${hash}`}
+                                                    href={`https://explorer.hiro.so/txid/${txId}?chain=testnet`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="underline font-medium"
@@ -562,15 +572,7 @@ export default function NFTProfilePage() {
 
             <div className="mt-8 text-center text-sm text-muted-foreground">
                 <p>
-                    Contract Address:{" "}
-                    <a
-                        href={blockExplorer.nft}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline hover:text-blue-600"
-                    >
-                        {contractAddresses.nft}
-                    </a>
+                    Deployed on Stacks Testnet
                 </p>
             </div>
         </div>

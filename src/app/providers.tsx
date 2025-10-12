@@ -1,61 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import '@rainbow-me/rainbowkit/styles.css';
-
-import {
-    getDefaultConfig,
-    RainbowKitProvider,
-    connectorsForWallets,
-    getDefaultWallets,
-} from '@rainbow-me/rainbowkit';
-import {
-    argentWallet,
-    trustWallet,
-    ledgerWallet,
-} from '@rainbow-me/rainbowkit/wallets';
-import { WagmiProvider } from 'wagmi';
 import {
     QueryClientProvider,
     QueryClient,
 } from "@tanstack/react-query";
-import 'dotenv/config'
-
-import {
-    sepolia
-} from 'wagmi/chains';
-import { agentChain } from '@/lib/customChain';
-
-// const projectId = process.env.WALLET_CONNECT_PROJECT_ID || '';
-const projectId = '9811958bd307518b364ff7178034c435';
-
-
-const config = getDefaultConfig({
-    appName: 'Core Realm',
-    projectId: projectId,
-    chains: [agentChain, sepolia],
-    ssr: true, // If your dApp uses server side rendering (SSR)
-});
-
-// const connectors = connectorsForWallets([
-//     ...wallets,
-//     {
-//         groupName: 'Other',
-//         wallets: [
-//             argentWallet({ projectId, chains }),
-//             trustWallet({ projectId, chains }),
-//             ledgerWallet({ projectId, chains }),
-//         ],
-//     },
-// ]);
-const { wallets } = getDefaultWallets({
-    appName: 'RainbowKit demo',
-    projectId,
-});
-
-const demoAppInfo = {
-    appName: 'My Wallet Demo',
-};
+import { StacksProvider } from '@/context/StacksContext';
 
 const queryClient = new QueryClient();
 
@@ -63,18 +13,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => setMounted(true), []);
     return (
-        <WagmiProvider config={config}>
-            <QueryClientProvider client={queryClient}>
+        <QueryClientProvider client={queryClient}>
+            <StacksProvider>
                 {mounted ? (
-                    <RainbowKitProvider appInfo={demoAppInfo}>
-                        {children}
-                    </RainbowKitProvider>
+                    children
                 ) : (
                     <div style={{ visibility: "hidden" }}>
                         {children}
                     </div>
                 )}
-            </QueryClientProvider>
-        </WagmiProvider>
+            </StacksProvider>
+        </QueryClientProvider>
     );
 }

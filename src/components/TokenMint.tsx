@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { parseEther, formatEther } from "viem";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,17 +9,31 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { RefreshCwIcon, CheckCircleIcon, AlertCircleIcon } from "lucide-react";
-import { contractAddresses, contractABIs, blockExplorer } from "@/lib/contracts";
-import { useAuth } from "@/hooks/useAuth";
+import { useStacks } from "@/context/StacksContext";
+import { 
+    mintTokens, 
+    getTokenBalance, 
+    getRemainingMintAllowance,
+    formatTokenAmount,
+    parseTokenAmount
+} from "@/lib/stacksUtils";
 
 function TokenMint() {
     const [amount, setAmount] = useState<number>(1);
     const [isSuccess, setIsSuccess] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [tokenPrice, setTokenPrice] = useState<number>(0);
+    const [isPending, setIsPending] = useState(false);
+    const [txId, setTxId] = useState<string | null>(null);
 
-    const { address, isConnected } = useAccount();
-    const { isAuthenticated } = useAuth();
+    const { stacksUser, userSession, isSignedIn } = useStacks();
+    const address = stacksUser?.profile?.stxAddress?.testnet || null;
+    const isConnected = isSignedIn();
+
+    // Token data state
+    const [remainingAllowance, setRemainingAllowance] = useState<number>(10);
+    const [balance, setBalance] = useState<number>(0);
+    const tokenSymbol = "SVT";
+    const tokenName = "StackVerse Token";
 
     // Reset states when transaction completes
     const resetStates = () => {
@@ -31,123 +43,92 @@ function TokenMint() {
         }, 5000);
     };
 
-    // Read contract data
-    const { data: mintPrice } = useReadContract({
-        address: contractAddresses.tokenMint as `0x${string}`,
-        abi: contractABIs.tokenMint,
-        functionName: "mintPrice",
-    });
+    // Fetch token data
+    useEffect(() => {
+        const fetchTokenData = async () => {
+            if (!address) return;
 
-    const { data: remainingAllowance } = useReadContract({
-        address: contractAddresses.tokenMint as `0x${string}`,
-        abi: contractABIs.tokenMint,
-        functionName: "getRemainingMintAllowance",
-        args: [address || "0x0000000000000000000000000000000000000000"],
-        query: {
-            enabled: !!address
-        }
-    });
+            try {
+                const allowance = await getRemainingMintAllowance(address);
+                const userBalance = await getTokenBalance(address);
+                setRemainingAllowance(allowance);
+                setBalance(userBalance);
+            } catch (err) {
+                console.error("Error fetching token data:", err);
+            }
+        };
 
-    const { data: tokenSymbol } = useReadContract({
-        address: contractAddresses.tokenMint as `0x${string}`,
-        abi: contractABIs.tokenMint,
-        functionName: "symbol",
-    });
+        fetchTokenData();
+        const interval = setInterval(fetchTokenData, 30000); // Refresh every 30 seconds
+        return () => clearInterval(interval);
+    }, [address]);
 
-    const { data: tokenName } = useReadContract({
-        address: contractAddresses.tokenMint as `0x${string}`,
-        abi: contractABIs.tokenMint,
-        functionName: "name",
-    });
-
-
-    // Write contract
-    const { data: hash, isPending, writeContract } = useWriteContract();
-
-    console.log("hash", hash, "isPending", isPending, "writeContract", writeContract);
-
-    // Wait for transaction receipt
-    const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({
-            hash,
-        });
-
-    // Add this near the top of your component to handle disabled states better
-    console.log("isConnected", isConnected, "isAuthenticated", isAuthenticated, "isPending", isPending, "isConfirming", isConfirming, "remainingAllowance", remainingAllowance);
-    const isDisabled = !isConnected || isPending || isConfirming || Number(remainingAllowance || 0) <= 0;
-
-    console.log("isDisabled", isDisabled);
+    const isDisabled = !isConnected || isPending || remainingAllowance <= 0;
 
     // Handle mint function
     const handleMint = async () => {
-
-        setTokenPrice(Number(mintPrice));
-        if (!mintPrice) {
-            setTokenPrice(0);
-        }
-
-        console.log("handleMint");
         try {
             setError(null);
 
-            if (!address) {
-                setError("Please connect your wallet first");
+            if (!address || !isConnected) {
+                setError("Please connect your Stacks wallet first");
                 return;
             }
 
-            // if (!isAuthenticated) {
-            //     setError("Please sign in with your wallet first");
-            //     return;
-            // }
+            if (amount <= 0) {
+                setError("Amount must be greater than 0");
+                return;
+            }
 
-            // if (!mintPrice) {
-            //     setTokenPrice(0);
-            // }
+            if (amount > remainingAllowance) {
+                setError("Amount exceeds daily limit");
+                return;
+            }
 
-            // Calculate the total value in wei
-            const totalValue = BigInt(Number(mintPrice)) * BigInt(amount);
+            setIsPending(true);
 
-            writeContract({
-                address: contractAddresses.tokenMint as `0x${string}`,
-                abi: contractABIs.tokenMint,
-                functionName: "mint",
-                args: [BigInt(amount)],
-                value: totalValue,
-            });
+            // Convert amount to microunits (6 decimals)
+            const microAmount = parseTokenAmount(amount);
+
+            await mintTokens(
+                userSession,
+                microAmount,
+                async (data) => {
+                    console.log("Mint successful:", data);
+                    setTxId(data.txId);
+                    setIsSuccess(true);
+                    setIsPending(false);
+                    
+                    // Refresh token data
+                    if (address) {
+                        const allowance = await getRemainingMintAllowance(address);
+                        const userBalance = await getTokenBalance(address);
+                        setRemainingAllowance(allowance);
+                        setBalance(userBalance);
+                    }
+                    
+                    resetStates();
+                },
+                (error) => {
+                    console.error("Mint cancelled or failed:", error);
+                    setError("Transaction cancelled or failed");
+                    setIsPending(false);
+                }
+            );
         } catch (err) {
             console.error("Error minting tokens:", err);
             setError(err instanceof Error ? err.message : "Failed to mint tokens");
+            setIsPending(false);
         }
     };
-
-    // Update UI based on transaction status
-    useEffect(() => {
-        if (isConfirmed) {
-            setIsSuccess(true);
-            resetStates();
-        }
-    }, [isConfirmed]);
-
-
-    // Add this right before the return statement
-    useEffect(() => {
-        console.log("Mint state:", {
-            address,
-            isConnected,
-            isAuthenticated,
-            remainingAllowance: Number(remainingAllowance || 0),
-            mintPrice,
-            amount
-        });
-    }, [address, isConnected, isAuthenticated, remainingAllowance, mintPrice, amount]);
 
     return (
         <div className="container max-w-4xl py-8">
             <Card className="border-slate-200 shadow-lg">
                 <CardHeader>
-                    <CardTitle className="text-2xl">Mint {tokenName as string || "Tokens"}</CardTitle>
+                    <CardTitle className="text-2xl">Mint {tokenName}</CardTitle>
                     <CardDescription>
-                        Mint up to {Number(remainingAllowance ?? 10).toString()} tokens per day
+                        Mint up to {formatTokenAmount(remainingAllowance * 1000000)} tokens per day • Balance: {formatTokenAmount(balance)} {tokenSymbol}
                     </CardDescription>
                 </CardHeader>
 
@@ -157,7 +138,7 @@ function TokenMint() {
                             <div className="flex justify-between">
                                 <Label htmlFor="amount">Amount to Mint</Label>
                                 <Badge variant="outline" className="font-mono">
-                                    {amount} {tokenSymbol as string || "Tokens"}
+                                    {amount} {tokenSymbol}
                                 </Badge>
                             </div>
 
@@ -165,17 +146,17 @@ function TokenMint() {
                                 <Slider
                                     id="amount"
                                     value={[amount]}
-                                    max={Number(remainingAllowance || 10)}
+                                    max={Math.floor(remainingAllowance / 1000000) || 10}
                                     min={1}
                                     step={1}
                                     onValueChange={(value) => setAmount(value[0])}
-                                    disabled={!isConnected || Number(remainingAllowance || 0) <= 0}
+                                    disabled={!isConnected || remainingAllowance <= 0}
                                 />
                             </div>
 
                             <div className="flex justify-between text-sm text-muted-foreground">
                                 <span>1</span>
-                                <span>{Number(remainingAllowance || 10)}</span>
+                                <span>{Math.floor(remainingAllowance / 1000000) || 10}</span>
                             </div>
                         </div>
 
@@ -184,10 +165,10 @@ function TokenMint() {
                         <div className="space-y-2">
                             <Label>Total Cost</Label>
                             <div className="text-2xl font-bold">
-                                {mintPrice ? formatEther(BigInt(Number(mintPrice) * amount)) : "0"} ETH
+                                Free
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                Plus gas fees
+                                Transaction fees apply
                             </p>
                         </div>
 
@@ -205,9 +186,9 @@ function TokenMint() {
                                 <AlertTitle className="text-green-800">Success!</AlertTitle>
                                 <AlertDescription className="text-green-700">
                                     Tokens minted successfully!{" "}
-                                    {hash && (
+                                    {txId && (
                                         <a
-                                            href={`${blockExplorer.tokenMint.split("?")[0]}/tx/${hash}`}
+                                            href={`https://explorer.hiro.so/txid/${txId}?chain=testnet`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="underline font-medium"
@@ -228,12 +209,12 @@ function TokenMint() {
                         onClick={handleMint}
                         disabled={isDisabled}
                     >
-                        {isPending || isConfirming ? (
+                        {isPending ? (
                             <>
                                 <RefreshCwIcon className="mr-2 h-4 w-4 animate-spin" />
-                                {isPending ? "Confirm in Wallet" : "Processing..."}
+                                Confirm in Wallet
                             </>
-                        ) : Number(remainingAllowance || 0) <= 0 ? (
+                        ) : remainingAllowance <= 0 ? (
                             <>Daily Limit Reached</>
                         ) : (
                             <>Mint Tokens</>
