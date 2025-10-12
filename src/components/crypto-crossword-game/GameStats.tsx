@@ -36,7 +36,7 @@ Time: ${formattedTime}
 Words: ${state.completedWords.length}/${state.words.length}
 Hints used: ${3 - state.hints}/3
 Accuracy: ${accuracy}%
-Play at: CoreRealm.com
+Play at: StackVerse.com
         `.trim();
 
         if (navigator.share) {

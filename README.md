@@ -1,14 +1,14 @@
-# CoreRealm
+# StackVerse
 
 ## 1. Project Overview
 
-CoreRealm is a platform that allows gamers to Play, Earn, Organize & Stream Games on the CoreDAO blockchain. Our vision is to create an immersive, impartial, and inclusive ecosystem for web3 gamers worldwide. The platform enables game developers to manage their communities, livestream gameplay, and offer playable games directly to users through blockchain integration. Built with Next.js, Prisma database management, and smart contract functionality, CoreRealm bridges traditional gaming experiences with Web3 capabilities to create a player-centric gaming environment.
+StackVerse is a platform that allows gamers to Play, Earn, Organize & Stream Games on the CoreDAO blockchain. Our vision is to create an immersive, impartial, and inclusive ecosystem for web3 gamers worldwide. The platform enables game developers to manage their communities, livestream gameplay, and offer playable games directly to users through blockchain integration. Built with Next.js, Prisma database management, and smart contract functionality, StackVerse bridges traditional gaming experiences with Web3 capabilities to create a player-centric gaming environment.
 
 ## Smart Contracts
 
-- CoreRealm Token : [0xcd34A2d8fFC72E3d587cfAEe3d1B0BdB11859501](https://scan.test2.btcs.network/address/0xcd34A2d8fFC72E3d587cfAEe3d1B0BdB11859501)
-- CoreRealm NFT Profile : [0x0b3a2D73D07eA2D5D0D0FB4Db09004f74D92767a ](https://scan.test2.btcs.network/address/0x0b3a2D73D07eA2D5D0D0FB4Db09004f74D92767a)
-- CoreRealm Onchain Chess Game NFT : [0x19D45938fD3C9f4847745d6068697C786515Ad43 ](https://scan.test2.btcs.network/address/0x19D45938fD3C9f4847745d6068697C786515Ad43)
+- StackVerse Token : [0xcd34A2d8fFC72E3d587cfAEe3d1B0BdB11859501](https://scan.test2.btcs.network/address/0xcd34A2d8fFC72E3d587cfAEe3d1B0BdB11859501)
+- StackVerse NFT Profile : [0x0b3a2D73D07eA2D5D0D0FB4Db09004f74D92767a ](https://scan.test2.btcs.network/address/0x0b3a2D73D07eA2D5D0D0FB4Db09004f74D92767a)
+- StackVerse Onchain Chess Game NFT : [0x19D45938fD3C9f4847745d6068697C786515Ad43 ](https://scan.test2.btcs.network/address/0x19D45938fD3C9f4847745d6068697C786515Ad43)
 
 ## 2. Market Need
 
@@ -22,7 +22,7 @@ CoreRealm is a platform that allows gamers to Play, Earn, Organize & Stream Game
 
 ## 3. Solution
 
-CoreRealm addresses these challenges by providing:
+StackVerse addresses these challenges by providing:
 
 - **Interactive Gaming Platform**: Engaging platform for gamers built on the CoreDAO blockchain
 - **Fair Streaming Economics**: Elimination of high commissions with improved transparency for content creators
@@ -33,7 +33,7 @@ CoreRealm addresses these challenges by providing:
 
 ## 4. Current Game Portfolio
 
-CoreRealm has already developed 7 puzzle-based onchain games:
+StackVerse has already developed 7 puzzle-based onchain games:
 
 1. **Chess**: Strategic board game with NFT integration
 2. **Sudoku**: Number-based puzzle with play-to-earn mechanics
@@ -122,4 +122,4 @@ CoreRealm has already developed 7 puzzle-based onchain games:
 
 ![Profile Page](https://decenlabs.com/wp-content/uploads/2025/03/7.png)
 
-CoreRealm represents a paradigm shift in how games are developed, played, and monetized. By creating a fair, transparent ecosystem built on the CoreDAO blockchain, we're empowering creators, engaging players, and building a sustainable Web3 gaming platform where all participants benefit from their contributions.
+StackVerse represents a paradigm shift in how games are developed, played, and monetized. By creating a fair, transparent ecosystem built on the CoreDAO blockchain, we're empowering creators, engaging players, and building a sustainable Web3 gaming platform where all participants benefit from their contributions.

@@ -43,7 +43,7 @@ const Hero = () => {
                     <div className="flex items-center mb-4">
                         <div className="text-white text-3xl font-Outfit">Introducing</div>
                         <div className="px-2 text-[#98ee2c] font-bold text-3xl font-serif">
-                            CoreRealm
+                            StackVerse
                         </div>
                     </div>
 

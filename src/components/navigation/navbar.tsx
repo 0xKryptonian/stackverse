@@ -25,9 +25,9 @@ const Navbar = () => {
 		<div className="bg-black w-full px-4 py-3 sticky top-0 z-50">
 			<div className="mx-4 flex items-center justify-between">
 				<Link href="/" className="flex items-center">
-					<Image src="/core.png" alt="CoreRealm" width={32} height={32} className="rounded-xl mx-2" />
+					<Image src="/core.png" alt="StackVerse" width={32} height={32} className="rounded-xl mx-2" />
 					<div className="text-[28px] md:text-[32px] text-white font-serif">
-						CoreRealm
+						StackVerse
 					</div>
 				</Link>
 
