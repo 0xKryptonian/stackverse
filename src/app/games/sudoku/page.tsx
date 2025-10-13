@@ -1,8 +1,6 @@
 import React from 'react';
-import SudokuGame from "@/components/sudoku-game";
+import SudokuGame from '@/components/sudoko-game';
 
-export const dynamic = 'force-dynamic';
-
-const SudokuPage = () => {
+export default function SudokuPage() {
     return <SudokuGame />;
-};
+}

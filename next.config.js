@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Removed output: 'export' to allow server-side rendering
+    // This fixes build issues with client-only components (Stacks wallet, wagmi remnants)
     env: {
     },
     images: {
@@ -11,6 +13,10 @@ const nextConfig = {
                 pathname: '/**/**',
             },
         ],
+    },
+    webpack: (config) => {
+        config.externals.push('pino-pretty', 'lokijs', 'encoding');
+        return config;
     },
 }
 

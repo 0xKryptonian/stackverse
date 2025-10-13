@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useStacks } from "@/context/StacksContext"
 import { useAuth } from "@/hooks/useAuth"
-import { TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -12,8 +12,7 @@ import { formatDistanceToNow } from "date-fns"
 import { Loader2, Trophy, History, Wallet, Gamepad, Calendar } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { ConnectButton } from "@rainbow-me/rainbowkit"
-import { useAuth } from "@/hooks/useAuth"
+import { StacksWalletButton } from "@/components/StacksWalletButton"
 import { GameScoreCard } from "@/components/profile/GameScoreCard"
 import { contractAddresses } from "@/lib/contracts"
 
@@ -75,10 +74,27 @@ export default function ProfilePage() {
     const [isLoading, setIsLoading] = useState(true)
 
     // Get REALM token balance
-    const { data: tokenBalance, isLoading: isBalanceLoading } = useBalance({
-        address,
-        token: TOKEN_CONTRACT_ADDRESS as `0x${string}`,
-    })
+    const [tokenBalance, setTokenBalance] = useState<number>(0)
+    const [isBalanceLoading, setIsBalanceLoading] = useState(false)
+
+    useEffect(() => {
+        const fetchBalance = async () => {
+            if (!address) return
+            setIsBalanceLoading(true)
+            try {
+                // TODO: Implement Stacks token balance fetching
+                // const balance = await getTokenBalance(address)
+                // setTokenBalance(balance)
+                setTokenBalance(0)
+            } catch (error) {
+                console.error('Error fetching balance:', error)
+            } finally {
+                setIsBalanceLoading(false)
+            }
+        }
+        fetchBalance()
+    }, [address])
+
 
     // Handle wallet authentication
     useEffect(() => {
@@ -152,7 +168,7 @@ export default function ProfilePage() {
                 <div className="flex flex-col items-center justify-center min-h-[60vh]">
                     <h1 className="text-3xl font-bold text-white mb-4">Connect Your Wallet</h1>
                     <p className="text-gray-400 mb-6">Please connect your wallet to view your profile</p>
-                    <ConnectButton />
+                    <StacksWalletButton />
                 </div>
             </div>
         )
@@ -211,7 +227,7 @@ export default function ProfilePage() {
                                         ) : (
                                             <div className="flex items-center">
                                                 <span className="text-xl font-bold text-[#98ee2c]">
-                                                    {tokenBalance ? parseFloat(tokenBalance.formatted).toFixed(2) : "0.00"}
+                                                    {tokenBalance ? tokenBalance.toFixed(2) : "0.00"}
                                                 </span>
                                                 <span className="ml-2 text-gray-400">REALM</span>
                                             </div>

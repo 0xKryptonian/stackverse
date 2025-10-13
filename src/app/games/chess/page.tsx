@@ -1,14 +1,10 @@
 import React from 'react'
-import ChessGame from '@/components/chess-game/ChessGame'
+import ChessGameApp from '@/components/chess-game'
 
-export const dynamic = 'force-dynamic';
-
-const ChessPage = () => {
+export default function ChessPage() {
     return (
-        <div>
-            <ChessGame />
+        <div className="container mx-auto py-8">
+            <ChessGameApp />
         </div>
     )
 }
-
-export default ChessPage;

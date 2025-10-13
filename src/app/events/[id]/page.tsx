@@ -41,7 +41,6 @@ const events = [
     {
         id: "3",
         title: "Update: CyberPet introduces new skins and muchmore!",
-        description: "Discover the latest updates to CyberPet including new skins and exciting features.",
         date: "March 27",
         time: "6:00PM",
         playbackId: "f5eese9wwl7c7htl",
@@ -51,16 +50,15 @@ const events = [
     }
 ];
 
-export const dynamic = 'force-dynamic';
+import { useStacks } from "@/context/StacksContext";
 
 export default function EventPage({ params }: { params: { id: string } }) {
-    const { address } = useAccount();
+    const { getAddress } = useStacks();
+    const address = getAddress();
     const event = events.find(e => e.id === params.id);
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const chatContainerRef = useRef<HTMLDivElement>(null);
-
-    // Mock wallet address - in a real app, this would come from your authentication system
     const userWalletAddress = address
 
     // Load messages from localStorage on component mount

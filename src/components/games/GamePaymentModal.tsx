@@ -3,13 +3,11 @@
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
-import { parseUnits } from "viem"
+import { useStacks } from "@/context/StacksContext"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
-import { ConnectButton } from "@rainbow-me/rainbowkit"
+import { openContractCall } from "@stacks/connect"
 import { recordGamePayment } from "@/lib/services/game-service"
-import { contractAddresses } from "@/lib/contracts"
 
 interface GamePaymentModalProps {
     isOpen: boolean
@@ -18,8 +16,8 @@ interface GamePaymentModalProps {
     gameName: string
 }
 
-// Token contract address from the prompt
-const TOKEN_CONTRACT_ADDRESS = contractAddresses.tokenMint as `0x${string}`
+// Stacks token contract address
+const STACKS_TOKEN_CONTRACT = process.env.NEXT_PUBLIC_STACKS_TOKEN_CONTRACT || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stackverse-token'
 // ERC20 transfer function signature
 const ERC20_ABI = [
     {
@@ -39,33 +37,47 @@ const PLATFORM_WALLET = "0x043Bb2629766bB4375c8EC3d0CbbfA77bC7e7BC9"
 
 export function GamePaymentModal({ isOpen, onClose, gamePath, gameName }: GamePaymentModalProps) {
     const router = useRouter()
-    const { address, isConnected } = useAccount()
+    const { getAddress, isSignedIn, userSession } = useStacks()
+    const address = getAddress()
+    const isConnected = isSignedIn()
     const [isPaying, setIsPaying] = useState(false)
     const [redirecting, setRedirecting] = useState(false)
-
-    const { data: hash, isPending, writeContract, error } = useWriteContract()
-
-    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-        hash,
-    })
+    const [error, setError] = useState<string | null>(null)
+    const [hash, setHash] = useState<string | null>(null)
+    const [isConfirmed, setIsConfirmed] = useState(false)
 
     const gameId = gamePath.split('/').pop() || ""
 
-    // Handle payment
+    // Handle payment with Stacks
     const handlePayment = async () => {
         if (!address) return
 
         setIsPaying(true)
+        setError(null)
 
         try {
-            await writeContract({
-                address: TOKEN_CONTRACT_ADDRESS,
-                abi: ERC20_ABI,
+            // TODO: Implement Stacks token transfer
+            // For now, simulate payment
+            await openContractCall({
+                contractAddress: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',
+                contractName: 'stackverse-token',
                 functionName: 'transfer',
-                args: [PLATFORM_WALLET, parseUnits('1', 18)], // Assuming 18 decimals for the token
+                functionArgs: [
+                    // Add proper Clarity values here
+                ],
+                onFinish: (data) => {
+                    setHash(data.txId)
+                    setIsConfirmed(true)
+                    setIsPaying(false)
+                },
+                onCancel: () => {
+                    setIsPaying(false)
+                },
+                userSession,
             })
         } catch (err) {
             console.error("Payment failed:", err)
+            setError(err instanceof Error ? err.message : "Payment failed")
             setIsPaying(false)
         }
     }
@@ -115,7 +127,7 @@ export function GamePaymentModal({ isOpen, onClose, gamePath, gameName }: GamePa
 
                     {error && (
                         <div className="bg-red-900/20 border border-red-800 p-3 rounded-md text-red-300 text-sm">
-                            {error.message || "Transaction failed. Please try again."}
+                            {error || "Transaction failed. Please try again."}
                         </div>
                     )}
                 </div>
@@ -123,7 +135,7 @@ export function GamePaymentModal({ isOpen, onClose, gamePath, gameName }: GamePa
                 <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-4">
                     {!isConnected ? (
                         <div className="w-full flex justify-center">
-                            <ConnectButton />
+                            <p className="text-gray-400">Please connect your Stacks wallet to continue</p>
                         </div>
                     ) : (
                         <>
@@ -131,19 +143,19 @@ export function GamePaymentModal({ isOpen, onClose, gamePath, gameName }: GamePa
                                 variant="outline"
                                 onClick={onClose}
                                 className="border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white"
-                                disabled={isPending || isConfirming}
+                                disabled={isPaying}
                             >
                                 Cancel
                             </Button>
                             <Button
                                 onClick={handlePayment}
                                 className="bg-[#98ee2c] text-black hover:bg-[#7bc922] font-bold"
-                                disabled={isPending || isConfirming}
+                                disabled={isPaying}
                             >
-                                {isPending || isConfirming ? (
+                                {isPaying ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        {isPending ? "Confirm in Wallet" : "Processing..."}
+                                        Confirm in Wallet
                                     </>
                                 ) : (
                                     "Pay & Play Now"

@@ -1,8 +1,6 @@
 "use client"
 
-import { useState } from "react"
-
-export const dynamic = 'force-dynamic';
+import React, { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { BsArrowRight } from "react-icons/bs"

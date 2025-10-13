@@ -7,7 +7,7 @@ import { AiOutlineSearch, AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
 import { CgProfile } from "react-icons/cg";
 import { MdOutlineAccountBalanceWallet } from "react-icons/md";
 import { cn } from "@/lib/utils";
-import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { StacksWalletButton } from '@/components/StacksWalletButton'
 import { FaFaucetDrip } from "react-icons/fa6";
 import { User } from "lucide-react";
 
@@ -89,7 +89,7 @@ const Navbar = () => {
 						<FaFaucetDrip className="text-2xl text-[#98ee2c]" />
 					</div>
 					<div className="px-4">
-						<ConnectButton />
+						<StacksWalletButton />
 					</div>
 
 				</div>
@@ -161,7 +161,7 @@ const Navbar = () => {
 						<MdOutlineAccountBalanceWallet className="mr-2" /> Wallet
 					</div>
 					<div className="py-2">
-						<ConnectButton />
+						<StacksWalletButton />
 					</div>
 				</div>
 			</div>
