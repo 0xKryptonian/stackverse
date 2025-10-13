@@ -6,24 +6,47 @@ import { useStacks } from "@/context/StacksContext";
 import { Button } from "@/components/ui/button";
 
 export function StacksWalletButton() {
-  const { stacksUser, connectWallet, disconnectWallet } = useStacks();
+  console.log('[StacksWalletButton] Component rendering');
+  
+  const context = useStacks();
+  console.log('[StacksWalletButton] Context received:', {
+    hasStacksUser: !!context.stacksUser,
+    hasConnectWallet: typeof context.connectWallet === 'function',
+    hasDisconnectWallet: typeof context.disconnectWallet === 'function',
+  });
+  
+  const { stacksUser, connectWallet, disconnectWallet } = context;
   const [stacksAddress, setStacksAddress] = useState<string | null>(null);
   const [connecting, setConnecting] = useState<boolean>(false);
 
   useEffect(() => {
+    console.log('[StacksWalletButton] stacksUser changed:', stacksUser);
     if (stacksUser?.profile?.stxAddress?.testnet) {
       setStacksAddress(stacksUser.profile.stxAddress.testnet);
+      console.log('[StacksWalletButton] Address set to:', stacksUser.profile.stxAddress.testnet);
     } else {
       setStacksAddress(null);
+      console.log('[StacksWalletButton] Address cleared');
     }
   }, [stacksUser]);
 
-  const handleConnect = async () => {
+  const handleConnect = () => {
+    console.log('[StacksWalletButton] handleConnect called');
+    console.log('[StacksWalletButton] connectWallet function:', connectWallet);
+    console.log('[StacksWalletButton] typeof connectWallet:', typeof connectWallet);
+    
     setConnecting(true);
     try {
+      console.log('[StacksWalletButton] Calling connectWallet...');
       connectWallet();
+      console.log('[StacksWalletButton] connectWallet called');
     } catch (error) {
-      console.error("Connection error:", error);
+      console.error('[StacksWalletButton] Connection error:', error);
+      console.error('[StacksWalletButton] Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
     } finally {
       setTimeout(() => setConnecting(false), 1000);
     }

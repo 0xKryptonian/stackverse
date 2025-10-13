@@ -10,8 +10,17 @@ import { StacksProvider } from '@/context/StacksContext';
 const queryClient = new QueryClient();
 
 export function Providers({ children }: { children: React.ReactNode }) {
+    console.log('[Providers] Component rendering');
     const [mounted, setMounted] = React.useState(false);
-    React.useEffect(() => setMounted(true), []);
+    
+    React.useEffect(() => {
+        console.log('[Providers] Mounting...');
+        setMounted(true);
+        console.log('[Providers] Mounted');
+    }, []);
+    
+    console.log('[Providers] Mounted state:', mounted);
+    
     return (
         <QueryClientProvider client={queryClient}>
             <StacksProvider>
