@@ -1,12 +1,14 @@
-"use client"
+"use client";
 
-import React from 'react';
+import { useState, useEffect } from "react";
+
+export const dynamic = 'force-dynamic';
+
 import { WordleGame } from '@/components/wordle-game';
 import Link from 'next/link';
 import { BsArrowLeft } from 'react-icons/bs';
 import gameWords from '@/data/words.json';
 import validWords from '@/data/validWords.json';
-
 // For now, we'll use placeholder data
 // const gameWords = [
 //     "apple", "beach", "chair", "dance", "eagle", "flame", "ghost", "heart", "igloo", "joker",

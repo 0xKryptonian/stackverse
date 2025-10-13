@@ -1,9 +1,12 @@
-import ChessGameApp from '@/components/chess-game'
+import React from 'react'
+import ChessGame from '@/components/chess-game/ChessGame'
+
+export const dynamic = 'force-dynamic';
 
 const ChessPage = () => {
     return (
         <div>
-            <ChessGameApp />
+            <ChessGame />
         </div>
     )
 }

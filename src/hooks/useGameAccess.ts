@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useAccount, useReadContract } from "wagmi"
+import { useStacks } from "@/context/StacksContext"
 
 // This is a simplified implementation
 // In a production app, you would check against a database or blockchain record
 export function useGameAccess(gameId: string) {
-    const { address, isConnected } = useAccount()
+    const { getAddress, isSignedIn } = useStacks()
+    const address = getAddress()
+    const isConnected = isSignedIn()
     const [hasAccess, setHasAccess] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
 

@@ -2,13 +2,45 @@
 
 ## 1. Project Overview
 
-StackVerse is a platform that allows gamers to Play, Earn, Organize & Stream Games on the CoreDAO blockchain. Our vision is to create an immersive, impartial, and inclusive ecosystem for web3 gamers worldwide. The platform enables game developers to manage their communities, livestream gameplay, and offer playable games directly to users through blockchain integration. Built with Next.js, Prisma database management, and smart contract functionality, StackVerse bridges traditional gaming experiences with Web3 capabilities to create a player-centric gaming environment.
+StackVerse is a platform that allows gamers to Play, Earn, Organize & Stream Games on the **Stacks blockchain**. Our vision is to create an immersive, impartial, and inclusive ecosystem for web3 gamers worldwide. The platform enables game developers to manage their communities, livestream gameplay, and offer playable games directly to users through blockchain integration. Built with Next.js, Prisma database management, and Clarity smart contracts, StackVerse bridges traditional gaming experiences with Web3 capabilities to create a player-centric gaming environment.
 
-## Smart Contracts
+> **🎉 Recently Migrated:** StackVerse has been successfully migrated from EVM to Stacks blockchain! See [MIGRATION_COMPLETE.md](./MIGRATION_COMPLETE.md) for details.
 
-- StackVerse Token : [0xcd34A2d8fFC72E3d587cfAEe3d1B0BdB11859501](https://scan.test2.btcs.network/address/0xcd34A2d8fFC72E3d587cfAEe3d1B0BdB11859501)
-- StackVerse NFT Profile : [0x0b3a2D73D07eA2D5D0D0FB4Db09004f74D92767a ](https://scan.test2.btcs.network/address/0x0b3a2D73D07eA2D5D0D0FB4Db09004f74D92767a)
-- StackVerse Onchain Chess Game NFT : [0x19D45938fD3C9f4847745d6068697C786515Ad43 ](https://scan.test2.btcs.network/address/0x19D45938fD3C9f4847745d6068697C786515Ad43)
+## Smart Contracts (Stacks Blockchain)
+
+### Clarity Contracts
+- **StackVerse Token (SVT)**: `stackverse-token.clar` - SIP-010 fungible token
+- **Profile NFT**: `profile-nft.clar` - User profile NFTs with metadata
+- **Contract Location**: `stacks-contracts/contracts/`
+
+**Deployment Status:**
+- ✅ Testnet: Ready for deployment
+- 🔄 Mainnet: Pending deployment
+
+See [stacks-contracts/README.md](./stacks-contracts/README.md) for contract details.
+
+## Quick Start
+
+```bash
+# Install dependencies
+bun install
+
+# Deploy contracts to testnet
+cd stacks-contracts && clarinet deploy --testnet
+
+# Update contract address in src/lib/stacksUtils.ts
+# Then start development server
+bun run dev
+```
+
+📚 **Full Setup Guide:** [QUICKSTART.md](./QUICKSTART.md)
+
+## Documentation
+
+- 📖 [Quick Start Guide](./QUICKSTART.md) - Get started in minutes
+- 📖 [Migration Guide](./STACKS_MIGRATION_GUIDE.md) - Complete migration details
+- 📖 [Deployment Checklist](./DEPLOYMENT_CHECKLIST.md) - Production deployment steps
+- 📖 [Contract Documentation](./stacks-contracts/README.md) - Smart contract details
 
 ## 2. Market Need
 

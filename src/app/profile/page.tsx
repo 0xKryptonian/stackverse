@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { useAccount, useBalance } from "wagmi"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect } from "react"
+import { useStacks } from "@/context/StacksContext"
+import { useAuth } from "@/hooks/useAuth"
+import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -60,8 +61,12 @@ interface GameActivity {
     transactions: Transaction[];
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function ProfilePage() {
-    const { address, isConnected } = useAccount()
+    const { getAddress, isSignedIn } = useStacks()
+    const address = getAddress()
+    const isConnected = isSignedIn()
     const { isAuthenticated, isLoading: isAuthLoading, login } = useAuth()
 
     const [profile, setProfile] = useState<UserProfile | null>(null)

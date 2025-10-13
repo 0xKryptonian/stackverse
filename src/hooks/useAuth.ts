@@ -1,12 +1,11 @@
 // hooks/useAuth.ts
-import { useAccount, useSignMessage, useDisconnect } from 'wagmi';
 import { useCallback, useEffect, useState, useRef } from 'react';
-import { createAuthMessage } from '@/lib/auth';
+import { useStacks } from '@/context/StacksContext';
+import { openSignatureRequestPopup } from '@stacks/connect';
 
 export function useAuth() {
-    const { address, chain } = useAccount();
-    const { signMessageAsync } = useSignMessage();
-    const { disconnect } = useDisconnect();
+    const { stacksUser, userSession, getAddress, disconnectWallet } = useStacks();
+    const address = getAddress();
     const [isLoading, setIsLoading] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState<any>(null);
@@ -173,8 +172,8 @@ export function useAuth() {
     };
 
     const login = useCallback(async () => {
-        if (!address || !chain) {
-            console.log('No address or chain, cannot login');
+        if (!address) {
+            console.log('No address, cannot login');
             return;
         }
 
@@ -201,17 +200,28 @@ export function useAuth() {
             // Set a timeout to reset the processing state if it gets stuck
             const timeoutId = setTimeout(resetProcessingState, 30000);
 
-            // Generate message
-            const message = await createAuthMessage(address, chain.id);
+            // Generate message for Stacks
+            const message = `Sign in to StackVerse\n\nAddress: ${address}\nTimestamp: ${Date.now()}`;
 
-            // Request signature
-            const signature = await signMessageAsync({ message });
+            // Request signature from Stacks wallet
+            const signature = await new Promise<string>((resolve, reject) => {
+                openSignatureRequestPopup({
+                    message,
+                    onFinish: (data) => {
+                        resolve(data.signature);
+                    },
+                    onCancel: () => {
+                        reject(new Error('User cancelled signature request'));
+                    },
+                    userSession,
+                });
+            });
 
             // Verify on server
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message, signature })
+                body: JSON.stringify({ message, signature, address })
             });
 
             // Clear the timeout since we got a response
@@ -253,7 +263,7 @@ export function useAuth() {
             setIsLoading(false);
             isProcessingRef.current = false;
         }
-    }, [address, chain, signMessageAsync]);
+    }, [address, userSession]);
 
     const logout = useCallback(() => {
         localStorage.removeItem('auth_token');
@@ -263,8 +273,8 @@ export function useAuth() {
         currentAddressRef.current = null;
         isProcessingRef.current = false;
         signInAttemptsRef.current = 0;
-        disconnect();
-    }, [disconnect]);
+        disconnectWallet();
+    }, [disconnectWallet]);
 
     return {
         login,

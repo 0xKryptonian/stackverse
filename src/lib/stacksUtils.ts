@@ -1,7 +1,7 @@
 import { openContractCall } from '@stacks/connect';
 import { 
-  StacksTestnet, 
-  StacksMainnet 
+  STACKS_TESTNET, 
+  STACKS_MAINNET
 } from '@stacks/network';
 import {
   AnchorMode,
@@ -10,7 +10,7 @@ import {
   stringUtf8CV,
   uintCV,
   principalCV,
-  callReadOnlyFunction,
+  fetchCallReadOnlyFunction,
   cvToJSON,
   cvToValue,
   Cl,
@@ -18,7 +18,7 @@ import {
 import type { UserSession } from '@stacks/connect';
 
 // Contract configuration
-const NETWORK = new StacksTestnet(); // Change to StacksMainnet() for production
+const NETWORK = STACKS_TESTNET; // Change to STACKS_MAINNET for production
 const CONTRACT_ADDRESS = 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM'; // Update with deployed address
 const PROFILE_NFT_CONTRACT = 'profile-nft';
 const TOKEN_CONTRACT = 'stackverse-token';
@@ -141,7 +141,7 @@ export async function updateProfileImage(
 
 export async function getProfile(tokenId: number) {
   try {
-    const result = await callReadOnlyFunction({
+    const result = await fetchCallReadOnlyFunction({
       contractAddress: CONTRACT_ADDRESS,
       contractName: PROFILE_NFT_CONTRACT,
       functionName: 'get-profile',
@@ -159,7 +159,7 @@ export async function getProfile(tokenId: number) {
 
 export async function getProfileOwner(tokenId: number) {
   try {
-    const result = await callReadOnlyFunction({
+    const result = await fetchCallReadOnlyFunction({
       contractAddress: CONTRACT_ADDRESS,
       contractName: PROFILE_NFT_CONTRACT,
       functionName: 'get-owner',
@@ -209,7 +209,7 @@ export async function mintTokens(
 
 export async function getTokenBalance(address: string) {
   try {
-    const result = await callReadOnlyFunction({
+    const result = await fetchCallReadOnlyFunction({
       contractAddress: CONTRACT_ADDRESS,
       contractName: TOKEN_CONTRACT,
       functionName: 'get-balance',
@@ -228,7 +228,7 @@ export async function getTokenBalance(address: string) {
 
 export async function getRemainingMintAllowance(address: string) {
   try {
-    const result = await callReadOnlyFunction({
+    const result = await fetchCallReadOnlyFunction({
       contractAddress: CONTRACT_ADDRESS,
       contractName: TOKEN_CONTRACT,
       functionName: 'get-remaining-mint-allowance',
@@ -247,7 +247,7 @@ export async function getRemainingMintAllowance(address: string) {
 
 export async function getTotalSupply() {
   try {
-    const result = await callReadOnlyFunction({
+    const result = await fetchCallReadOnlyFunction({
       contractAddress: CONTRACT_ADDRESS,
       contractName: TOKEN_CONTRACT,
       functionName: 'get-total-supply',

@@ -2,25 +2,25 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import { AppConfig, UserSession, showConnect } from '@stacks/connect';
-import { StacksTestnet, StacksMainnet } from '@stacks/network';
+import { STACKS_TESTNET, STACKS_MAINNET, StacksNetwork } from '@stacks/network';
 import type { UserData } from '@stacks/connect';
 
 interface StacksContextType {
   stacksUser: UserData | null;
-  stacksNetwork: StacksTestnet | StacksMainnet;
+  stacksNetwork: StacksNetwork;
   connectWallet: () => void;
   disconnectWallet: () => void;
   userSession: UserSession;
   isSignedIn: () => boolean;
   getAddress: () => string | null;
-  getNetwork: () => StacksTestnet | StacksMainnet;
+  getNetwork: () => StacksNetwork;
 }
 
 const StacksContext = createContext<StacksContextType | undefined>(undefined);
 
 export function StacksProvider({ children }: { children: ReactNode }) {
   const [stacksUser, setStacksUser] = useState<UserData | null>(null);
-  const stacksNetwork = useMemo(() => new StacksTestnet(), []); // Change to StacksMainnet() for production
+  const stacksNetwork = useMemo(() => STACKS_TESTNET, []); // Change to StacksMainnet() for production
   const appConfig = useMemo(() => new AppConfig(['store_write', 'publish_data']), []);
   const userSession = useMemo(() => new UserSession({ appConfig }), [appConfig]);
 
@@ -43,7 +43,6 @@ export function StacksProvider({ children }: { children: ReactNode }) {
         console.log('Connected to Stacks:', userData.profile.stxAddress.testnet);
       },
       userSession,
-      network: 'testnet', // Change to 'mainnet' for production
     });
   };
 

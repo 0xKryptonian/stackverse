@@ -1,11 +1,12 @@
 "use client"
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAuth } from '@/hooks/useAuth';
-import { useAccount } from 'wagmi';
+import { useStacks } from '@/context/StacksContext';
+import { StacksWalletButton } from '@/components/StacksWalletButton';
 import { useState } from 'react';
 
 export function AuthButton() {
-    const { address } = useAccount();
+    const { getAddress, isSignedIn } = useStacks();
+    const address = getAddress();
     const { login, logout, isLoading, isAuthenticated, user, isAutoSigningIn } = useAuth();
     const [error, setError] = useState<string>();
 
@@ -20,7 +21,7 @@ export function AuthButton() {
 
     return (
         <div className="flex items-center gap-2 flex-wrap">
-            <ConnectButton />
+            <StacksWalletButton />
 
             {/* Show sign-in button only if:
                 1. Wallet is connected

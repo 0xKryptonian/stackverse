@@ -51,6 +51,8 @@ const events = [
     }
 ];
 
+export const dynamic = 'force-dynamic';
+
 export default function EventPage({ params }: { params: { id: string } }) {
     const { address } = useAccount();
     const event = events.find(e => e.id === params.id);
