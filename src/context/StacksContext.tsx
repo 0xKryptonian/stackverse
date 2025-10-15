@@ -25,12 +25,37 @@ export function StacksProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log('[StacksProvider] Initializing...');
     console.log('[StacksProvider] UserSession created:', userSession);
-    // console.log('[StacksProvider] Is user signed in?', userSession.isUserSignedIn());
     
-    if (userSession.isUserSignedIn()) {
-      const userData = userSession.loadUserData();
-      setStacksUser(userData);
-      console.log('[StacksProvider] User already signed in:', userData.profile.stxAddress.testnet);
+    try {
+      // Try to check if user is signed in - may fail with stale session data
+      const isSignedIn = userSession.isUserSignedIn();
+      console.log('[StacksProvider] Is user signed in?', isSignedIn);
+      
+      if (isSignedIn) {
+        const userData = userSession.loadUserData();
+        setStacksUser(userData);
+        console.log('[StacksProvider] User already signed in:', userData.profile.stxAddress.testnet);
+      }
+    } catch (error) {
+      // Clear stale session data if there's an error
+      console.warn('[StacksProvider] Error loading session, clearing stale data:', error);
+      try {
+        userSession.signUserOut();
+        // Also clear localStorage manually to remove all stale Stacks data
+        if (typeof window !== 'undefined') {
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith('blockstack') || key.startsWith('stacks'))) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => localStorage.removeItem(key));
+          console.log('[StacksProvider] Cleared', keysToRemove.length, 'stale localStorage items');
+        }
+      } catch (clearError) {
+        console.error('[StacksProvider] Error clearing session:', clearError);
+      }
     }
   }, []);
 
@@ -83,14 +108,27 @@ export function StacksProvider({ children }: { children: ReactNode }) {
     connectWallet,
     disconnectWallet,
     userSession,
-    isSignedIn: () => userSession.isUserSignedIn(),
+    isSignedIn: () => {
+      try {
+        return userSession.isUserSignedIn();
+      } catch (error) {
+        console.warn('[StacksProvider] Error checking sign-in status:', error);
+        return false;
+      }
+    },
     getAddress: () => stacksUser?.profile?.stxAddress?.testnet || null,
   };
 
   console.log('[StacksProvider] Rendering with value:', {
     hasUser: !!stacksUser,
     address: stacksUser?.profile?.stxAddress?.testnet,
-    isSignedIn: userSession.isUserSignedIn(),
+    isSignedIn: (() => {
+      try {
+        return userSession.isUserSignedIn();
+      } catch {
+        return false;
+      }
+    })(),
   });
 
   return (
