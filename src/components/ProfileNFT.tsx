@@ -73,21 +73,28 @@ export default function NFTProfilePage() {
             setIsLoading(true);
             setError(null);
 
+            console.log('[ProfileNFT] Fetching profile for token ID:', tokenId);
             const profile = await getProfile(parseInt(tokenId));
+            console.log('[ProfileNFT] Received profile:', profile);
             
-            if (profile && profile.value) {
+            if (profile && profile.success && profile.value) {
+                console.log('[ProfileNFT] Profile data:', profile.value);
                 setProfileData(profile.value);
+                
                 // Pre-fill form fields with existing data
+                // Note: Contract uses kebab-case (social-link, token-uri, creation-date)
                 setName(profile.value.name || "");
                 setBio(profile.value.bio || "");
-                setSocialLink(profile.value["social-link"] || "");
+                setSocialLink(profile.value["social-link"] || profile.value.socialLink || "");
+                setImageUrl(profile.value["token-uri"] || profile.value.tokenUri || "");
             } else {
-                setError("Profile not found");
+                console.log('[ProfileNFT] Profile not found or empty response');
+                setError("Profile not found for token ID " + tokenId);
                 setProfileData(null);
             }
         } catch (err) {
-            console.error("Error fetching profile:", err);
-            setError("Profile not found or error fetching data");
+            console.error("[ProfileNFT] Error fetching profile:", err);
+            setError("Profile not found or error fetching data: " + (err instanceof Error ? err.message : String(err)));
             setProfileData(null);
         } finally {
             setIsLoading(false);
@@ -418,14 +425,16 @@ export default function NFTProfilePage() {
                                             <h4 className="font-medium mb-2">Current Profile Data</h4>
                                             <div className="grid grid-cols-2 gap-2 text-sm">
                                                 <div className="text-slate-500">Name:</div>
-                                                <div className="font-medium">{profileData.name}</div>
+                                                <div className="font-medium">{profileData.name || "—"}</div>
                                                 <div className="text-slate-500">Bio:</div>
                                                 <div className="font-medium">{profileData.bio || "—"}</div>
                                                 <div className="text-slate-500">Social Link:</div>
-                                                <div className="font-medium">{profileData.socialLink || "—"}</div>
+                                                <div className="font-medium">{profileData["social-link"] || profileData.socialLink || "—"}</div>
                                                 <div className="text-slate-500">Created:</div>
                                                 <div className="font-medium">
-                                                    {new Date(Number(profileData.creationDate) * 1000).toLocaleDateString()}
+                                                    {profileData["creation-date"] || profileData.creationDate 
+                                                        ? new Date(Number(profileData["creation-date"] || profileData.creationDate) * 10).toLocaleDateString()
+                                                        : "Invalid Date"}
                                                 </div>
                                             </div>
                                         </div>

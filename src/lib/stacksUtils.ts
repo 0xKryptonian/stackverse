@@ -150,7 +150,36 @@ export async function getProfile(tokenId: number) {
       senderAddress: CONTRACT_ADDRESS,
     });
 
-    return cvToJSON(result);
+    console.log('[getProfile] Raw result:', result);
+    const jsonResult = cvToJSON(result);
+    console.log('[getProfile] JSON result:', jsonResult);
+    
+    // The contract returns (ok (some profile-data)) or (ok none)
+    // cvToJSON returns nested structure: { success: true, value: { value: { value: { field: { value: "..." } } } } }
+    if (jsonResult.success && jsonResult.value && jsonResult.value.value && jsonResult.value.value.value) {
+      const profileData = jsonResult.value.value.value;
+      
+      // Extract actual values from the nested structure
+      const extractedProfile = {
+        name: profileData.name?.value || '',
+        bio: profileData.bio?.value || '',
+        'social-link': profileData['social-link']?.value || '',
+        'token-uri': profileData['token-uri']?.value || '',
+        'creation-date': profileData['creation-date']?.value || '0',
+      };
+      
+      console.log('[getProfile] Extracted profile:', extractedProfile);
+      
+      return {
+        success: true,
+        value: extractedProfile
+      };
+    }
+    
+    return {
+      success: true,
+      value: null
+    };
   } catch (error) {
     console.error('Error fetching profile:', error);
     throw error;
