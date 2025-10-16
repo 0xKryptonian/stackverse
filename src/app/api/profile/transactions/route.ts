@@ -49,19 +49,24 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        const user = await db.user.findUnique({
+        // Find or create user
+        let user = await db.user.findUnique({
             where: { walletAddress: address },
         })
 
         if (!user) {
-            return NextResponse.json(
-                { error: "User not found" },
-                { status: 404 }
-            )
+            // Auto-create user if they don't exist
+            console.log('[Transaction API] Creating new user for address:', address)
+            user = await db.user.create({
+                data: {
+                    walletAddress: address,
+                    email: `${address.toLowerCase()}@stacks.temp`, // Temporary email
+                },
+            })
         }
 
         const data = await req.json()
-        const { type, amount, txHash, status, description, tokenSymbol = "REALM" } = data
+        const { type, amount, txHash, status, description, tokenSymbol = "SVT" } = data
 
         const transaction = await db.transaction.create({
             data: {
@@ -75,11 +80,12 @@ export async function POST(req: NextRequest) {
             },
         })
 
+        console.log('[Transaction API] Transaction created:', transaction.id)
         return NextResponse.json({ transaction })
     } catch (error) {
         console.error("Error creating transaction:", error)
         return NextResponse.json(
-            { error: "Failed to create transaction" },
+            { error: "Failed to create transaction", details: error instanceof Error ? error.message : String(error) },
             { status: 500 }
         )
     }

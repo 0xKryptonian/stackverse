@@ -25,6 +25,8 @@ interface GameScoreParams {
 
 export async function recordGamePayment(params: GamePaymentParams) {
     try {
+        console.log('[GameService] Recording payment:', params)
+        
         const response = await fetch(`/api/profile/transactions?address=${params.address}`, {
             method: "POST",
             headers: {
@@ -36,17 +38,22 @@ export async function recordGamePayment(params: GamePaymentParams) {
                 txHash: params.txHash,
                 status: "COMPLETED",
                 description: `Payment for playing game: ${params.gameId}`,
+                tokenSymbol: "SVT",
             }),
         })
 
         if (!response.ok) {
-            throw new Error("Failed to record payment")
+            const errorData = await response.json().catch(() => ({}))
+            console.error('[GameService] Failed to record payment:', response.status, errorData)
+            throw new Error(`Failed to record payment: ${response.status}`)
         }
 
-        return await response.json()
+        const result = await response.json()
+        console.log('[GameService] Payment recorded successfully:', result)
+        return result
     } catch (error) {
-        console.error("Error recording game payment:", error)
-        toast.error("Failed to record your payment. Please contact support.")
+        console.error("[GameService] Error recording game payment:", error)
+        // Don't show toast - this is non-critical since blockchain payment succeeded
         throw error
     }
 }

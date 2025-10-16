@@ -43,15 +43,22 @@ export async function GET(req: NextRequest) {
             )
         }
 
-        const user = await db.user.findUnique({
+        // Find or create user by wallet address
+        let user = await db.user.findUnique({
             where: { walletAddress: address },
         })
 
         if (!user) {
-            return NextResponse.json(
-                { error: "User not found" },
-                { status: 404 }
-            )
+            // Auto-create user if they don't exist
+            console.log('[Games API] Creating new user for address:', address)
+            user = await db.user.create({
+                data: {
+                    walletAddress: address,
+                    email: `${address.toLowerCase()}@stacks.temp`,
+                },
+            })
+            // Return empty game stats for new users
+            return NextResponse.json({ gameStats: [] })
         }
 
         // Get game plays with game details

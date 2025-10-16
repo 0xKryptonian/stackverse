@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useStacks } from "@/context/StacksContext"
-import { useAuth } from "@/hooks/useAuth"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -66,7 +65,6 @@ export default function ProfilePage() {
     const { getAddress, isSignedIn } = useStacks()
     const address = getAddress()
     const isConnected = isSignedIn()
-    const { isAuthenticated, isLoading: isAuthLoading, login } = useAuth()
 
     const [profile, setProfile] = useState<UserProfile | null>(null)
     const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -76,34 +74,6 @@ export default function ProfilePage() {
     // Get SVT token balance
     const [tokenBalance, setTokenBalance] = useState<number>(0)
     const [isBalanceLoading, setIsBalanceLoading] = useState(false)
-
-    useEffect(() => {
-        const fetchBalance = async () => {
-            if (!address) return
-            setIsBalanceLoading(true)
-            try {
-                // Import getTokenBalance from stacksUtils
-                const { getTokenBalance } = await import('@/lib/stacksUtils')
-                const balance = await getTokenBalance(address)
-                // Convert from micro-SVT to SVT (6 decimals)
-                setTokenBalance(balance / 1000000)
-            } catch (error) {
-                console.error('Error fetching SVT balance:', error)
-                setTokenBalance(0)
-            } finally {
-                setIsBalanceLoading(false)
-            }
-        }
-        fetchBalance()
-    }, [address])
-
-
-    // Handle wallet authentication
-    useEffect(() => {
-        if (isConnected && address && isAuthenticated) {
-            fetchProfileData()
-        }
-    }, [isConnected, address, isAuthenticated])
 
     // Define fetchProfileData as a useCallback to avoid dependency issues
     const fetchProfileData = useCallback(async () => {
@@ -142,18 +112,39 @@ export default function ProfilePage() {
         }
     }, [address, isConnected])
 
+    useEffect(() => {
+        const fetchBalance = async () => {
+            if (!address) return
+            setIsBalanceLoading(true)
+            try {
+                // Import getTokenBalance from stacksUtils
+                const { getTokenBalance } = await import('@/lib/stacksUtils')
+                const balance = await getTokenBalance(address)
+                // Convert from micro-SVT to SVT (6 decimals)
+                setTokenBalance(balance / 1000000)
+            } catch (error) {
+                console.error('Error fetching SVT balance:', error)
+                setTokenBalance(0)
+            } finally {
+                setIsBalanceLoading(false)
+            }
+        }
+        fetchBalance()
+    }, [address])
+
+
+    // Load profile data when wallet is connected
+    useEffect(() => {
+        if (isConnected && address) {
+            fetchProfileData()
+        } else {
+            setIsLoading(false)
+        }
+    }, [isConnected, address, fetchProfileData])
+
     const gamesPlayedCount = transactions.filter(tx => tx.type === "GAME_PAYMENT").length;
 
-    // Add a manual login handler for the connect button
-    const handleManualLogin = async () => {
-        try {
-            await login()
-        } catch (error) {
-            console.error("Manual login failed:", error)
-        }
-    }
-
-    if (isLoading || isAuthLoading) {
+    if (isLoading) {
         return (
             <div className="container mx-auto py-10 px-4">
                 <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -169,25 +160,8 @@ export default function ProfilePage() {
             <div className="container mx-auto py-10 px-4">
                 <div className="flex flex-col items-center justify-center min-h-[60vh]">
                     <h1 className="text-3xl font-bold text-white mb-4">Connect Your Wallet</h1>
-                    <p className="text-gray-400 mb-6">Please connect your wallet to view your profile</p>
+                    <p className="text-gray-400 mb-6">Please connect your Stacks wallet to view your profile</p>
                     <StacksWalletButton />
-                </div>
-            </div>
-        )
-    }
-
-    if (isConnected && !isAuthenticated) {
-        return (
-            <div className="container mx-auto py-10 px-4">
-                <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                    <h1 className="text-3xl font-bold text-white mb-4">Authentication Required</h1>
-                    <p className="text-gray-400 mb-6">Please sign a message to authenticate your wallet</p>
-                    <button
-                        onClick={handleManualLogin}
-                        className="bg-[#98ee2c] text-black px-4 py-2 rounded font-bold hover:bg-[#7bc922] transition-colors"
-                    >
-                        Sign In
-                    </button>
                 </div>
             </div>
         )

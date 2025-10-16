@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useStacks } from "@/context/StacksContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoIcon, CoinsIcon, RefreshCwIcon, CheckCircleIcon, AlertCircleIcon } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 
 const STACKS_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_STACKS_TOKEN_CONTRACT || 'ST167SDV0GEX4XN11ZZ4THVFKRW5H9BVCVXG1XYMD.stackverse-token';
 
@@ -13,7 +12,6 @@ export default function TokenMintPage() {
     const { getAddress, isSignedIn } = useStacks();
     const address = getAddress();
     const isConnected = isSignedIn();
-    const { isAuthenticated } = useAuth();
 
     // State for contract data
     const [mintPrice, setMintPrice] = useState<number>(0);
@@ -51,17 +49,16 @@ export default function TokenMintPage() {
 
     const formattedBalance = tokenBalance;
 
-    // Add this right before the return statement
+    // Debug logging for token state
     useEffect(() => {
-        console.log("Mint state:", {
+        console.log("Token state:", {
             address,
             isConnected,
-            isAuthenticated,
             remainingAllowance: Number(remainingAllowance || 0),
             mintPrice,
             amount
         });
-    }, [address, isConnected, isAuthenticated, remainingAllowance, mintPrice, amount]);
+    }, [address, isConnected, remainingAllowance, mintPrice, amount]);
 
     return (
         <div className="container max-w-4xl py-2">

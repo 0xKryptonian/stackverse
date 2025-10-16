@@ -96,19 +96,22 @@ export function GamePaymentModal({ isOpen, onClose, gamePath, gameName }: GamePa
     // Redirect to game page after successful payment
     useEffect(() => {
         if (isConfirmed && !redirecting) {
-            // Record the transaction
-            if (address) {
+            setRedirecting(true)
+            
+            // Record the transaction (non-blocking - don't wait for it)
+            if (address && hash) {
                 recordGamePayment({
                     gameId: gameId,
-                    txHash: hash || "",
+                    txHash: hash,
                     amount: 1,
                     address: address,
                 }).catch(err => {
-                    console.error("Failed to record payment:", err)
+                    console.error("Failed to record payment (non-critical):", err)
+                    // Continue anyway - payment succeeded on blockchain
                 })
             }
 
-            setRedirecting(true)
+            // Redirect immediately - don't wait for recording
             router.push(gamePath)
             onClose()
         }
