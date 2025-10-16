@@ -7,6 +7,8 @@ import { useStacks } from "@/context/StacksContext"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { openContractCall } from "@stacks/connect"
+import { StacksTestnet } from "@stacks/network"
+import { uintCV, principalCV, noneCV, AnchorMode, PostConditionMode } from "@stacks/transactions"
 import { recordGamePayment } from "@/lib/services/game-service"
 
 interface GamePaymentModalProps {
@@ -16,24 +18,16 @@ interface GamePaymentModalProps {
     gameName: string
 }
 
-// Stacks token contract address
-const STACKS_TOKEN_CONTRACT = process.env.NEXT_PUBLIC_STACKS_TOKEN_CONTRACT || 'ST167SDV0GEX4XN11ZZ4THVFKRW5H9BVCVXG1XYMD.stackverse-token'
-// ERC20 transfer function signature
-const ERC20_ABI = [
-    {
-        name: "transfer",
-        type: "function",
-        stateMutability: "nonpayable",
-        inputs: [
-            { name: "to", type: "address" },
-            { name: "amount", type: "uint256" }
-        ],
-        outputs: [{ name: "", type: "bool" }]
-    }
-]
+// Stacks configuration
+const NETWORK = new StacksTestnet()
+const CONTRACT_ADDRESS = 'ST167SDV0GEX4XN11ZZ4THVFKRW5H9BVCVXG1XYMD'
+const TOKEN_CONTRACT_NAME = 'stackverse-token'
 
-// Platform wallet that receives the fees
-const PLATFORM_WALLET = "0x043Bb2629766bB4375c8EC3d0CbbfA77bC7e7BC9"
+// Platform wallet that receives the fees (Stacks address)
+const PLATFORM_WALLET = CONTRACT_ADDRESS // Use deployer address as platform wallet for now
+
+// Payment amount: 1 SVT = 1,000,000 micro-SVT (6 decimals)
+const PAYMENT_AMOUNT = 1000000
 
 export function GamePaymentModal({ isOpen, onClose, gamePath, gameName }: GamePaymentModalProps) {
     const router = useRouter()
@@ -48,36 +42,53 @@ export function GamePaymentModal({ isOpen, onClose, gamePath, gameName }: GamePa
 
     const gameId = gamePath.split('/').pop() || ""
 
-    // Handle payment with Stacks
+    // Handle payment with Stacks SVT Token
     const handlePayment = async () => {
-        if (!address) return
+        if (!address) {
+            setError("Please connect your wallet")
+            return
+        }
 
         setIsPaying(true)
         setError(null)
 
         try {
-            // TODO: Implement Stacks token transfer
-            // For now, simulate payment
+            console.log('[GamePayment] Initiating payment:', {
+                from: address,
+                to: PLATFORM_WALLET,
+                amount: PAYMENT_AMOUNT,
+                contract: `${CONTRACT_ADDRESS}.${TOKEN_CONTRACT_NAME}`
+            })
+
             await openContractCall({
-                contractAddress: 'ST167SDV0GEX4XN11ZZ4THVFKRW5H9BVCVXG1XYMD',
-                contractName: 'stackverse-token',
+                network: NETWORK,
+                anchorMode: AnchorMode.Any,
+                contractAddress: CONTRACT_ADDRESS,
+                contractName: TOKEN_CONTRACT_NAME,
                 functionName: 'transfer',
                 functionArgs: [
-                    // Add proper Clarity values here
+                    uintCV(PAYMENT_AMOUNT), // amount: 1 SVT (1,000,000 micro-SVT)
+                    principalCV(address), // sender: current user
+                    principalCV(PLATFORM_WALLET), // recipient: platform wallet
+                    noneCV(), // memo: none
                 ],
+                postConditionMode: PostConditionMode.Allow,
                 onFinish: (data) => {
+                    console.log('[GamePayment] Payment successful:', data)
                     setHash(data.txId)
                     setIsConfirmed(true)
                     setIsPaying(false)
                 },
                 onCancel: () => {
+                    console.log('[GamePayment] Payment cancelled by user')
+                    setError("Payment cancelled")
                     setIsPaying(false)
                 },
                 userSession,
             })
         } catch (err) {
-            console.error("Payment failed:", err)
-            setError(err instanceof Error ? err.message : "Payment failed")
+            console.error("[GamePayment] Payment failed:", err)
+            setError(err instanceof Error ? err.message : "Payment failed. Please try again.")
             setIsPaying(false)
         }
     }
@@ -109,7 +120,7 @@ export function GamePaymentModal({ isOpen, onClose, gamePath, gameName }: GamePa
                 <DialogHeader>
                     <DialogTitle className="text-xl font-bold text-white">Play {gameName}</DialogTitle>
                     <DialogDescription className="text-gray-400">
-                        To play this game, you need to pay 1 REALM token for each play session.
+                        To play this game, you need to pay 1 SVT token for each play session.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -118,10 +129,13 @@ export function GamePaymentModal({ isOpen, onClose, gamePath, gameName }: GamePa
                         <p className="text-sm text-gray-400 mb-2">Payment details:</p>
                         <div className="flex justify-between">
                             <span>Game play fee</span>
-                            <span className="font-semibold">1 REALM Token</span>
+                            <span className="font-semibold">1 SVT Token</span>
                         </div>
                         <p className="text-xs text-gray-500 mt-2 italic">
                             Note: Each play session requires a separate payment
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Token: StackVerse Token (SVT)
                         </p>
                     </div>
 

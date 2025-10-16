@@ -66,7 +66,7 @@ export default function TokenMintPage() {
     return (
         <div className="container max-w-4xl py-2">
             <h1 className="text-4xl font-bold text-center mb-8 text-white bg-clip-text text-transparent">
-                Get your $Game token to play
+                Get your $SVC token to play
             </h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

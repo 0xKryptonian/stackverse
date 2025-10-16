@@ -73,7 +73,7 @@ export default function ProfilePage() {
     const [gameStats, setGameStats] = useState<GameStat[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
-    // Get REALM token balance
+    // Get SVT token balance
     const [tokenBalance, setTokenBalance] = useState<number>(0)
     const [isBalanceLoading, setIsBalanceLoading] = useState(false)
 
@@ -82,12 +82,14 @@ export default function ProfilePage() {
             if (!address) return
             setIsBalanceLoading(true)
             try {
-                // TODO: Implement Stacks token balance fetching
-                // const balance = await getTokenBalance(address)
-                // setTokenBalance(balance)
-                setTokenBalance(0)
+                // Import getTokenBalance from stacksUtils
+                const { getTokenBalance } = await import('@/lib/stacksUtils')
+                const balance = await getTokenBalance(address)
+                // Convert from micro-SVT to SVT (6 decimals)
+                setTokenBalance(balance / 1000000)
             } catch (error) {
-                console.error('Error fetching balance:', error)
+                console.error('Error fetching SVT balance:', error)
+                setTokenBalance(0)
             } finally {
                 setIsBalanceLoading(false)
             }
@@ -221,15 +223,15 @@ export default function ProfilePage() {
                                     </div>
 
                                     <div className="bg-[#151515] p-4 rounded-md">
-                                        <p className="text-sm text-gray-400 mb-1">REALM Token Balance</p>
+                                        <p className="text-sm text-gray-400 mb-1">SVT Token Balance</p>
                                         {isBalanceLoading ? (
                                             <Skeleton className="h-6 w-24 bg-gray-700" />
                                         ) : (
-                                            <div className="flex items-center">
+                                            <div>
                                                 <span className="text-xl font-bold text-[#98ee2c]">
                                                     {tokenBalance ? tokenBalance.toFixed(2) : "0.00"}
                                                 </span>
-                                                <span className="ml-2 text-gray-400">REALM</span>
+                                                <span className="ml-2 text-gray-400">SVT</span>
                                             </div>
                                         )}
                                     </div>
