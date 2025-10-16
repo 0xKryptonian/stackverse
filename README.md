@@ -8,6 +8,13 @@ StackVerse is a platform that allows gamers to Play, Earn, Organize & Stream Gam
 
 ## Smart Contracts (Stacks Blockchain)
 
+
+Deployer: ST167SDV0GEX4XN11ZZ4THVFKRW5H9BVCVXG1XYMD
+
+✅ StackVerse Token (SVT) : ST167SDV0GEX4XN11ZZ4THVFKRW5H9BVCVXG1XYMD.stackverse-token
+✅ Profile NFT : ST167SDV0GEX4XN11ZZ4THVFKRW5H9BVCVXG1XYMD.profile-nft
+
+
 ### Clarity Contracts
 - **StackVerse Token (SVT)**: `stackverse-token.clar` - SIP-010 fungible token
 - **Profile NFT**: `profile-nft.clar` - User profile NFTs with metadata
