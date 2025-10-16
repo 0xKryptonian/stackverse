@@ -410,23 +410,6 @@ All games feature:
 
 ---
 
-## 👥 Team
-
-**Built by:** 0xShikhar  
-**Role:** Full-stack blockchain developer  
-**Experience:** 15+ years development, Web3 gaming specialist
-
----
-
-## 🔗 Links
-
-- **Live Demo**: [Coming Soon]
-- **GitHub**: [Repository]
-- **Contracts**: [Stacks Explorer](https://explorer.hiro.so/?chain=testnet)
-- **Documentation**: See `/docs` folder
-
----
-
 ## 🚀 Next Steps
 
 **Immediate (Post-Hackathon):**
