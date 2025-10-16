@@ -85,8 +85,8 @@ export default function NFTProfilePage() {
                 // Note: Contract uses kebab-case (social-link, token-uri, creation-date)
                 setName(profile.value.name || "");
                 setBio(profile.value.bio || "");
-                setSocialLink(profile.value["social-link"] || profile.value.socialLink || "");
-                setImageUrl(profile.value["token-uri"] || profile.value.tokenUri || "");
+                setSocialLink(profile.value["social-link"] || "");
+                setImageUrl(profile.value["token-uri"] || "");
             } else {
                 console.log('[ProfileNFT] Profile not found or empty response');
                 setError("Profile not found for token ID " + tokenId);
