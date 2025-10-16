@@ -62,7 +62,7 @@ export function StacksWalletButton() {
       <Button
         onClick={handleConnect}
         disabled={connecting}
-        className="bg-orange-600 hover:bg-orange-700 text-white font-semibold"
+        className="bg-[#98ee2c] hover:bg-[#f0f0f0] text-black font-semibold"
       >
         {connecting ? "Connecting..." : "Connect Stacks Wallet"}
       </Button>

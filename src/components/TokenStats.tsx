@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { InfoIcon, CoinsIcon, RefreshCwIcon, CheckCircleIcon, AlertCircleIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
-const STACKS_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_STACKS_TOKEN_CONTRACT || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stackverse-token';
+const STACKS_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_STACKS_TOKEN_CONTRACT || 'ST167SDV0GEX4XN11ZZ4THVFKRW5H9BVCVXG1XYMD.stackverse-token';
 
 export default function TokenMintPage() {
     const [amount, setAmount] = useState<number>(1);

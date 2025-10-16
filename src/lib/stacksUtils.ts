@@ -17,9 +17,9 @@ import {
 } from '@stacks/transactions';
 import type { UserSession } from '@stacks/connect';
 
-// Contract configuration
+// Contract configuration - Testnet Deployment
 const NETWORK = new StacksTestnet(); // Change to new StacksMainnet() for production
-const CONTRACT_ADDRESS = 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM'; // Update with deployed address
+const CONTRACT_ADDRESS = 'ST167SDV0GEX4XN11ZZ4THVFKRW5H9BVCVXG1XYMD'; // Deployed testnet address
 const PROFILE_NFT_CONTRACT = 'profile-nft';
 const TOKEN_CONTRACT = 'stackverse-token';
 

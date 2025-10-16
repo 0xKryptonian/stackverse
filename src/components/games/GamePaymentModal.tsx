@@ -17,7 +17,7 @@ interface GamePaymentModalProps {
 }
 
 // Stacks token contract address
-const STACKS_TOKEN_CONTRACT = process.env.NEXT_PUBLIC_STACKS_TOKEN_CONTRACT || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.stackverse-token'
+const STACKS_TOKEN_CONTRACT = process.env.NEXT_PUBLIC_STACKS_TOKEN_CONTRACT || 'ST167SDV0GEX4XN11ZZ4THVFKRW5H9BVCVXG1XYMD.stackverse-token'
 // ERC20 transfer function signature
 const ERC20_ABI = [
     {
@@ -59,7 +59,7 @@ export function GamePaymentModal({ isOpen, onClose, gamePath, gameName }: GamePa
             // TODO: Implement Stacks token transfer
             // For now, simulate payment
             await openContractCall({
-                contractAddress: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',
+                contractAddress: 'ST167SDV0GEX4XN11ZZ4THVFKRW5H9BVCVXG1XYMD',
                 contractName: 'stackverse-token',
                 functionName: 'transfer',
                 functionArgs: [
