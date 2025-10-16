@@ -17,14 +17,14 @@
 (define-data-var mint-price uint u0) ;; Price in microSTX (0 for free)
 
 ;; Data Maps
-(define-map profiles 
-  uint 
+(define-map profiles
+  uint
   {
     name: (string-ascii 50),
     bio: (string-utf8 256),
     social-link: (string-utf8 256),
     token-uri: (string-utf8 256),
-    creation-date: uint
+    creation-date: uint,
   }
 )
 
@@ -50,101 +50,108 @@
 )
 
 ;; Public functions
-(define-public (create-profile 
-  (name (string-ascii 50))
-  (bio (string-utf8 256))
-  (social-link (string-utf8 256))
-  (token-uri (string-utf8 256))
-)
-  (let
-    (
+(define-public (create-profile
+    (name (string-ascii 50))
+    (bio (string-utf8 256))
+    (social-link (string-utf8 256))
+    (token-uri (string-utf8 256))
+  )
+  (let (
       (token-id (+ (var-get last-token-id) u1))
       (current-price (var-get mint-price))
     )
     ;; Validate inputs
     (asserts! (> (len name) u0) err-invalid-data)
     (asserts! (> (len token-uri) u0) err-invalid-data)
-    
+    (asserts! (<= (len bio) u256) err-invalid-data)
+    (asserts! (<= (len social-link) u256) err-invalid-data)
+
     ;; Mint NFT
     (try! (nft-mint? profile-nft token-id tx-sender))
-    
+
     ;; Store profile data
     (map-set profiles token-id {
       name: name,
       bio: bio,
       social-link: social-link,
       token-uri: token-uri,
-      creation-date: block-height
+      creation-date: stacks-block-height,
     })
-    
+
     ;; Update last token ID
     (var-set last-token-id token-id)
-    
+
     (ok token-id)
   )
 )
 
 (define-public (update-profile
-  (token-id uint)
-  (name (string-ascii 50))
-  (bio (string-utf8 256))
-  (social-link (string-utf8 256))
-)
-  (let
-    (
-      (current-profile (unwrap! (map-get? profiles token-id) err-not-token-owner))
-    )
+    (token-id uint)
+    (name (string-ascii 50))
+    (bio (string-utf8 256))
+    (social-link (string-utf8 256))
+  )
+  (let ((current-profile (unwrap! (map-get? profiles token-id) err-not-token-owner)))
     ;; Check ownership
-    (asserts! (is-eq (some tx-sender) (nft-get-owner? profile-nft token-id)) err-not-authorized)
-    ;; Validate name
+    (asserts! (is-eq (some tx-sender) (nft-get-owner? profile-nft token-id))
+      err-not-authorized
+    )
+    ;; Validate inputs
     (asserts! (> (len name) u0) err-invalid-data)
-    
+    (asserts! (<= (len bio) u256) err-invalid-data)
+    (asserts! (<= (len social-link) u256) err-invalid-data)
+
     ;; Update profile
     (map-set profiles token-id {
       name: name,
       bio: bio,
       social-link: social-link,
       token-uri: (get token-uri current-profile),
-      creation-date: (get creation-date current-profile)
+      creation-date: (get creation-date current-profile),
     })
-    
+
     (ok true)
   )
 )
 
 (define-public (update-profile-image
-  (token-id uint)
-  (new-token-uri (string-utf8 256))
-)
-  (let
-    (
-      (current-profile (unwrap! (map-get? profiles token-id) err-not-token-owner))
-    )
+    (token-id uint)
+    (new-token-uri (string-utf8 256))
+  )
+  (let ((current-profile (unwrap! (map-get? profiles token-id) err-not-token-owner)))
     ;; Check ownership
-    (asserts! (is-eq (some tx-sender) (nft-get-owner? profile-nft token-id)) err-not-authorized)
+    (asserts! (is-eq (some tx-sender) (nft-get-owner? profile-nft token-id))
+      err-not-authorized
+    )
     ;; Validate URI
     (asserts! (> (len new-token-uri) u0) err-invalid-data)
-    
+
     ;; Update URI
     (map-set profiles token-id {
       name: (get name current-profile),
       bio: (get bio current-profile),
       social-link: (get social-link current-profile),
       token-uri: new-token-uri,
-      creation-date: (get creation-date current-profile)
+      creation-date: (get creation-date current-profile),
     })
-    
+
     (ok true)
   )
 )
 
-(define-public (transfer 
-  (token-id uint)
-  (sender principal)
-  (recipient principal)
-)
+(define-public (transfer
+    (token-id uint)
+    (sender principal)
+    (recipient principal)
+  )
   (begin
+    ;; Validate caller is sender
     (asserts! (is-eq tx-sender sender) err-not-authorized)
+    ;; Validate token exists
+    (asserts! (is-some (nft-get-owner? profile-nft token-id)) err-not-token-owner)
+    ;; Validate recipient is not sender
+    (asserts! (not (is-eq sender recipient)) err-invalid-data)
+    ;; Transfer NFT
     (nft-transfer? profile-nft token-id sender recipient)
   )
 )
